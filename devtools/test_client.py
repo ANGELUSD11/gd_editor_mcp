@@ -4,6 +4,7 @@ Usage: python devtools/test_client.py                       lists tools and prom
        python devtools/test_client.py <tool> '<json>'       calls a tool
        python devtools/test_client.py --calls calls.json    runs a list of calls in one session:
            [{"tool": "gd_check_ready", "args": {}}, ...]    (stops at the first error)
+           {"sleep": 1.5} waits between calls (e.g. to take screenshots during a playtest)
 Images are saved to devtools/out/.
 """
 import asyncio
@@ -47,6 +48,9 @@ async def main() -> None:
             elif sys.argv[1] == '--calls':
                 calls = json.loads(Path(sys.argv[2]).read_text(encoding='utf-8'))
                 for i, c in enumerate(calls):
+                    if 'sleep' in c:
+                        await asyncio.sleep(float(c['sleep']))
+                        continue
                     print('=== [%d] %s' % (i, c['tool']))
                     if not await call(s, c['tool'], c.get('args', {}), c.get('label', '%02d_%s' % (i, c['tool']))):
                         break
