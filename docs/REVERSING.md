@@ -7,18 +7,26 @@ report an unknown executable and the game is left untouched.
 
 ## Steps
 
-1. **Candidate addresses.** Download `bindings/<version>/GeometryDash.bro` from
-   [geode-sdk/bindings](https://github.com/geode-sdk/bindings). The `win 0x...` addresses are RVAs relative to the
-   executable's base.
-2. **Check that they are function starts.** Every RVA must appear in the executable's `.pdata` table.
+The tools need the `dev` extra (`pip install -e .[dev]`, for capstone). No external disassembler is required.
+
+1. **Candidate addresses and annotation data.** Generate the data for the new version:
+   ```
+   python devtools/build_data.py --version <version>     # [--exe PATH] [--bindings PATH_OR_URL]
+   ```
+   It downloads `bindings/<version>/GeometryDash.bro` from [geode-sdk/bindings](https://github.com/geode-sdk/bindings)
+   (the `win 0x...` addresses are RVAs relative to the executable's base) and writes `devtools/data/iat_<version>.json`
+   (the executable's import slots) and `devtools/data/names_<version>.json` (binding names by address).
+2. **Check that they are function starts.** `build_data.py` reports how many binding addresses look like function
+   starts (a `.pdata` entry, or an aligned leaf function after padding) and lists the ones that fall inside another
+   function. A low percentage means the bindings do not match the executable.
 3. **Check that they are the right function.** Freshly published bindings contain mistakes. Disassemble each one
    and look at what it calls:
    ```
    python devtools/disasm.py 0x1c7590 80     # annotates cocos2d imports and binding names
    python devtools/xref.py 0x1c8500          # who calls a function
    ```
-   `disasm.py` uses `devtools/data/iat.json` and `devtools/data/names_<version>.json`; regenerate them for the new
-   version (the executable's import map and the binding names).
+   Both default to the Steam install path; use `--exe` (or the `GD_EXE` variable) for another copy, and
+   `disasm.py --version` to pick the annotation data when the executable has no table yet.
 4. **Create the table** `src/versions/<version>-win.json` by copying the previous one: `exe_sha256` (16-character
    prefix), the `rva` and `bytes` (first 6 bytes) of every function, the `GameObject` vtable with the
    `getSaveString` slot, and the field offsets.
