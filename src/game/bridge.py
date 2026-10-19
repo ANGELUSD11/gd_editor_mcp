@@ -82,7 +82,7 @@ class GameBridge:
                                          % (table.label, report['problems'][:3]))
             session.on('detached', self._on_detached)
             self._session, self._script, self.process, self.table = session, script, proc, table
-            log.info('conectado a GD %s (pid %d)', table.label, proc.pid)
+            log.info('connected to GD %s (pid %d)', table.label, proc.pid)
 
     async def connect(self) -> None:
         if not self.connected:
