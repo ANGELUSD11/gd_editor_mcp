@@ -7,7 +7,7 @@ name = "gd-editor-mcp"
 version = "0.2.0"
 description = "MCP server to control the Geometry Dash editor live from your agent (Claude Code or another one)"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
     "frida>=17,<18",
     "mcp>=2.3,<3",

@@ -16,17 +16,22 @@ functions.
 | 2 | The server registered in that agent | `gd-editor-mcp install` registers it and verifies that it connects |
 | 3 | Geometry Dash open in the **editor, with an empty level** | the `gd_check_ready` tool (the agent runs it before touching anything) |
 
-You also need Windows, Python 3.10 or newer and a supported Geometry Dash version (currently **2.2091**).
+You also need Windows, Python 3.12 or newer and a supported Geometry Dash version (currently **2.2091**).
 
 ## Installation
 
 ```
 git clone <repository-url> gd_editor_mcp
 cd gd_editor_mcp
-pip install .                # or: uv tool install .   /   pipx install .
-gd-editor-mcp install        # registers the server in Claude Code (for all your projects)
-gd-editor-mcp doctor         # checks the 3 prerequisites
+pip install -r requirements.txt   # exact, tested versions of every dependency
+pip install --no-deps .           # or, with the newest compatible versions: pip install .   /   uv tool install .
+gd-editor-mcp install             # registers the server in Claude Code (for all your projects)
+gd-editor-mcp doctor              # checks the 3 prerequisites
 ```
+
+`requirements.txt` pins every dependency (direct and transitive) to the latest version on PyPI at the time it was
+generated, with platform markers so the same file works on Windows and Linux. To refresh it:
+`uv pip compile pyproject.toml --universal --python-version 3.12 -o requirements.txt`.
 
 Using another agent? `gd-editor-mcp config` prints the `mcpServers` block to paste into its configuration.
 To remove it from Claude Code: `gd-editor-mcp uninstall`.
@@ -75,6 +80,21 @@ Ask for a song and the agent can fit the gameplay to it:
 What it cannot do: listen (it judges energy and onsets, not melody or feel), follow songs whose tempo changes,
 download songs, or play the level to check the timing. Songs must already be downloaded in GD.
 
+## Docker
+
+The image runs the test suite and the tools that do not touch the game: song listing and analysis, and `.gmd` files.
+**The live editor tools do not work in a container**: they attach to `GeometryDash.exe` running natively on Windows,
+and a container cannot see the host's processes. To build levels in the game, use the native installation above.
+
+```
+docker build -t gd-editor-mcp .
+docker run --rm gd-editor-mcp python tests/run.py
+docker run --rm -i -v "%LOCALAPPDATA%\GeometryDash:/data/GeometryDash:ro" -e LOCALAPPDATA=/data gd-editor-mcp
+```
+
+The last command starts the MCP server over stdio with your downloaded songs mounted read-only, so an agent can
+use `gd_list_songs` and `gd_analyze_song` from the container.
+
 ## Safety
 
 - **It only edits the validated level.** `gd_check_ready` requires an empty level and remembers its identity.
@@ -113,7 +133,7 @@ writing for the rest of the project, which is compiled in memory.
 
 ```
 python -m venv .venv
-.venv\Scripts\pip install -e .[dev]
+.venv\Scripts\pip install -r requirements.txt -e .[dev]
 .venv\Scripts\python tests\run.py
 .venv\Scripts\python devtools\test_client.py                  # lists tools and prompts
 .venv\Scripts\python devtools\test_client.py gd_check_ready   # calls a tool the way an agent would
