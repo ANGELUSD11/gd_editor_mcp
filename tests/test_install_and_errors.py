@@ -59,7 +59,7 @@ class EntryPointsTest(unittest.TestCase):
             return [t.name for t in await mcp.list_tools()], [p.name for p in await mcp.list_prompts()]
         tools, prompts = asyncio.run(listing())
         self.assertIn('gd_check_ready', tools)
-        self.assertEqual(len(tools), 18)
+        self.assertEqual(len(tools), 19)
         self.assertEqual(sorted(prompts), ['load_gmd', 'new_level', 'review_level'])
 
 

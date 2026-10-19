@@ -64,6 +64,7 @@ already has objects...), it tells you what to do and changes nothing until it is
 | `gd_analyze_song` | BPM, beat grid, bars, sections, drops and cuts of a song |
 | `gd_beat_to_x` | Converts song beats or times into level x positions (song offset, start speed, speed portals) |
 | `gd_check_jumps` | Simulates the cube with planned clicks: does it get through, where it dies, timing margin |
+| `gd_check_layout` | Finds placement mistakes: spikes inside blocks or flush in 1-block pits, thin gaps, overlaps |
 | `gd_view` / `gd_screenshot` | Moves the editor camera and captures the game's actual frame |
 | `gd_playtest` | Starts or stops the playtest |
 | `gd_debug_tree` | Diagnostics: the scene's node tree |
@@ -79,6 +80,24 @@ It covers cube mode with normal size and gravity: blocks, spikes, saws, yellow p
 Other portals, pads, orbs and slopes stop the simulation with a message instead of giving a wrong answer, and moving
 objects are simulated at their editor positions. Hitboxes come from `src/physics/hitboxes.json`, built with
 `devtools/build_hitboxes.py`.
+
+## Layout check
+
+`gd_check_layout` looks at how the layout is built, not how it plays, and lists the mistakes that make a level look
+sloppy, with the position of each one and how to fix it:
+
+| Rule | Severity | What it finds |
+|---|---|---|
+| `spike_in_block` | error | a spike partly inside a block |
+| `flush_pit` | warning | spikes in a 1-block pit: their tips are level with the floor, so they look embedded between blocks |
+| `thin_gap` | warning | a gap narrower than half a block between blocks or spikes, or between them and the ground |
+| `overlap` | warning | blocks or slopes overlapping each other |
+| `duplicate` | warning | the same object twice in the same place |
+| `sunk_spike` | warning | a spike partly below the ground |
+
+It also counts blocks and spikes off the 30-unit grid (fine for decoration, sloppy for gameplay). Like
+`gd_check_jumps`, it can check planned objects before they are built. Only visible blocks, slopes and full-size
+spikes are checked; decoration and objects marked "no touch" or hidden are left alone.
 
 ## Music sync
 
@@ -135,7 +154,7 @@ src/                   the gd_editor_mcp package (pyproject.toml maps the import
   versions/            address tables per GD version (JSON)
   levels/              level format: level strings, .gmd files and song time <-> x (pure logic)
   music/               downloaded songs and beat/structure analysis (pure logic)
-  physics/             cube simulator and object hitboxes (pure logic)
+  physics/             cube simulator, object hitboxes and layout checks (pure logic)
 tests/                 unit tests (python tests/run.py); tests/data holds a sample level
 devtools/              reverse engineering and debugging (see docs/REVERSING.md)
 ```

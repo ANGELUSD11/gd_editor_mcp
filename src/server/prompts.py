@@ -11,9 +11,10 @@ Do it like this:
    If there is a song: find it with gd_list_songs, set it with gd_set_song, analyze it with gd_analyze_song,
    match the level sections to the song sections, and get every jump, orb, portal and effect position from
    gd_beat_to_x (after placing the speed portals).
-3. Build section by section. Before building a cube section, check its jumps with gd_check_jumps (pass the
-   planned objects and clicks); then add it with gd_add_objects, center the camera with gd_view and check it with
-   gd_screenshot; fix anything that does not look right or does not pass.
+3. Build section by section. Before building a section, check its layout with gd_check_layout and, for cube
+   sections, its jumps with gd_check_jumps (pass the planned objects and clicks); then add it with gd_add_objects,
+   run gd_check_layout on the level, center the camera with gd_view and check it with gd_screenshot; fix anything
+   that does not look right or does not pass.
 4. When you finish, run gd_playtest and take a screenshot, then summarize what you built and how to try it.
 """
 
@@ -21,7 +22,8 @@ REVIEW_LEVEL = """\
 Review the level I have open in the editor.
 
 1. Run gd_check_ready with continue_existing=true (I want to keep what is there).
-2. Go through the level from left to right with gd_view + gd_screenshot (and gd_get_objects when you need details).
+2. Run gd_check_layout on the whole level, then go through it from left to right with gd_view + gd_screenshot
+   (and gd_get_objects when you need details).
 3. Tell me the problems you see (impossible jumps, decoration covering the gameplay, empty areas, colors) and
    suggest concrete fixes. Do not change anything until I confirm.
 """

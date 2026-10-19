@@ -11,10 +11,12 @@ from mcp.server.mcpserver.exceptions import ToolError
 from ..errors import GDError, LevelChanged
 from ..levels import SPEED_PORTALS, Level, ObjectFilter, Timeline, read_gmd, shift_object, split_objects, write_gmd
 from ..music import analyze_file, get_song, list_songs
-from ..physics import World, check_clicks
+from ..physics import World, check_clicks, check_layout
 
 MAX_CONVERSIONS = 2000
 MAX_CLICKS = 500
+MAX_LEVEL_OBJECTS = 200000
+LAYOUT_MARGIN = 60.0         # objects just outside the checked area, so its edges are judged in context
 
 if TYPE_CHECKING:
     from .app import AppContext
@@ -222,7 +224,7 @@ def register_tools(mcp: MCPServer, app: 'AppContext') -> None:
         return {'song_offset': timeline.song_offset, 'speed_changes': [vars(s) for s in timeline.segments],
                 'positions': rows}
 
-    # ------------------------------------------------------------ gameplay check
+    # ------------------------------------------------------------ gameplay and layout checks
     @tool
     async def gd_check_jumps(clicks: list[float] | None = None, beats: list[float] | None = None,
                              bpm: float | None = None, first_beat: float | None = None, x_start: float = 0.0,
@@ -268,7 +270,7 @@ def register_tools(mcp: MCPServer, app: 'AppContext') -> None:
         level_objects = []
         if include_level:
             flt = ObjectFilter(x_min=x_start - 200, x_max=x_end + 200)
-            level_objects = (await editor.get_objects(flt, 200000))['objects']
+            level_objects = (await editor.get_objects(flt, MAX_LEVEL_OBJECTS))['objects']
         world = World.from_objects(level_objects + planned)
         t0 = timeline.time_at(x_start)
         speed = timeline.x_at(t0)[1]
@@ -276,6 +278,28 @@ def register_tools(mcp: MCPServer, app: 'AppContext') -> None:
         report = await asyncio.to_thread(check_clicks, world, times, x_start, x_end, y_start, speed, robustness)
         return {'clicks_x': [round(x, 1) for x in xs], 'x_start': x_start, 'x_end': round(x_end, 1),
                 'start_speed': speed, 'collision_objects': len(world.bodies), **report}
+
+    @tool
+    async def gd_check_layout(objects: str | None = None, include_level: bool = True, x_min: float | None = None,
+                              x_max: float | None = None, max_problems: int = 40) -> dict:
+        """Checks how the layout looks (not how it plays) and lists the placement mistakes.
+
+        Errors: spikes partly inside blocks. Warnings: spikes flush in a 1-block pit (their tips are level with the
+        floor, so they look embedded between blocks), thin gaps and overlaps between blocks, duplicated objects and
+        spikes sunk into the ground. It also counts blocks and spikes off the 30-unit grid.
+        objects: planned objects not built yet, to check them before gd_add_objects; include_level also reads the
+        level's objects from the editor (only between x_min and x_max if given). Only visible blocks, slopes and
+        full-size spikes are checked. Fix every error and warning before moving on: `fixes` says how.
+        """
+        planned = split_objects(objects) if objects else []
+        if not include_level and not planned:
+            raise ToolError('Give objects, or include_level=True to check the level.')
+        level_objects = []
+        if include_level:
+            flt = ObjectFilter(x_min=None if x_min is None else x_min - LAYOUT_MARGIN,
+                               x_max=None if x_max is None else x_max + LAYOUT_MARGIN)
+            level_objects = (await editor.get_objects(flt, MAX_LEVEL_OBJECTS))['objects']
+        return await asyncio.to_thread(check_layout, level_objects + planned, max_problems, x_min, x_max)
 
     # ------------------------------------------------------------ view and test
     @tool

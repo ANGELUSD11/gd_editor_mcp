@@ -22,6 +22,13 @@ Required workflow:
 3. Review what you built with gd_view + gd_screenshot and fix it with gd_get_objects / gd_delete_objects.
 4. Check every cube section with gd_check_jumps: pass the planned objects before building it, and check the level
    again after building. Aim for a timing window of at least +-40 ms on easy levels.
+5. Check every section with gd_check_layout before building it (planned objects) and after building it, and fix
+   all errors and warnings: spikes inside blocks, spikes flush in 1-block pits, thin gaps and overlaps.
+
+Layout quality: keep blocks, slopes and spikes on the 30-unit grid (centers at 15 + 30k) and keep the clicks on
+the beat instead of moving blocks off the grid to match it. Make pits at least 2 blocks deep. Do not limit the
+design to what gd_check_jumps can simulate: use game modes, decoration and color, and review those parts with
+screenshots.
 
 Music sync: find the song with gd_list_songs, set it (and the offset where the level starts) with gd_set_song,
 get its beat grid and sections with gd_analyze_song, place the speed portals, then turn beats into x positions
