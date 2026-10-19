@@ -30,9 +30,10 @@ packages = [
     "gd_editor_mcp.game",
     "gd_editor_mcp.levels",
     "gd_editor_mcp.music",
+    "gd_editor_mcp.physics",
     "gd_editor_mcp.server",
     "gd_editor_mcp.versions",
 ]
 
 [tool.setuptools.package-data]
-gd_editor_mcp = ["game/agent/*.js", "versions/*.json"]
+gd_editor_mcp = ["game/agent/*.js", "versions/*.json", "physics/hitboxes.json"]

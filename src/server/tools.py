@@ -9,10 +9,12 @@ from mcp.server.mcpserver import Context, Image, MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 
 from ..errors import GDError, LevelChanged
-from ..levels import Level, ObjectFilter, read_gmd, shift_object, split_objects, write_gmd
+from ..levels import SPEED_PORTALS, Level, ObjectFilter, Timeline, read_gmd, shift_object, split_objects, write_gmd
 from ..music import analyze_file, get_song, list_songs
+from ..physics import World, check_clicks
 
 MAX_CONVERSIONS = 2000
+MAX_CLICKS = 500
 
 if TYPE_CHECKING:
     from .app import AppContext
@@ -219,6 +221,61 @@ def register_tools(mcp: MCPServer, app: 'AppContext') -> None:
             row['beat'] = b
         return {'song_offset': timeline.song_offset, 'speed_changes': [vars(s) for s in timeline.segments],
                 'positions': rows}
+
+    # ------------------------------------------------------------ gameplay check
+    @tool
+    async def gd_check_jumps(clicks: list[float] | None = None, beats: list[float] | None = None,
+                             bpm: float | None = None, first_beat: float | None = None, x_start: float = 0.0,
+                             x_end: float | None = None, y_start: float = 0.0, objects: str | None = None,
+                             include_level: bool = True, start_speed: str | None = None,
+                             robustness: bool = True) -> dict:
+        """Simulates the cube through the level with the planned clicks and checks that it gets through.
+
+        clicks: x positions of the player's center when clicking; or beats with bpm/first_beat (song beats, as in
+        gd_beat_to_x). The level's objects between x_start and x_end are read from the editor; objects adds planned
+        objects that are not built yet (include_level=False checks them alone), so a section can be checked before
+        building it. y_start is the height of the cube's bottom at x_start (0 = on the ground). start_speed
+        ('0.5x'...'4x', default '1x') is the speed at x=0 when include_level=False; otherwise the level's is used.
+        Returns the run (survived/died/stopped, where and why, wasted clicks), where the cube dies without clicking,
+        and, if it survives, the timing window (how early/late every click can be, in ms) and the failures with a
+        random error per click. Cube mode only (normal size and gravity): yellow pads, yellow orbs and speed portals
+        are simulated; other portals, pads, orbs and slopes stop the simulation. Margins under ~20 ms are risky.
+        """
+        planned = split_objects(objects) if objects else []
+        if include_level:
+            state = await editor.song_state()
+            portals = (await editor.get_objects(ObjectFilter(ids=list(SPEED_PORTALS)), 100000))['objects']
+            timeline = Timeline.from_level(state['header'], portals + planned)
+        else:
+            codes = {'1x': 0, '0.5x': 1, '2x': 2, '3x': 3, '4x': 4}
+            if (start_speed or '1x') not in codes:
+                raise ToolError('start_speed must be one of %s.' % ', '.join(codes))
+            timeline = Timeline.from_level('kA4,%d' % codes[start_speed or '1x'], planned)
+
+        xs = list(clicks or [])
+        if beats:
+            if bpm is None or first_beat is None:
+                raise ToolError('Converting beats needs bpm and first_beat (from gd_analyze_song).')
+            xs += [timeline.song_time_to_x(first_beat + b * 60.0 / bpm)['x'] for b in beats]
+        xs = sorted(x for x in xs if x >= x_start)
+        if len(xs) > MAX_CLICKS:
+            raise ToolError('At most %d clicks per check.' % MAX_CLICKS)
+        if x_end is None:
+            x_end = (xs[-1] if xs else x_start) + 600.0
+        if x_end <= x_start:
+            raise ToolError('x_end must be greater than x_start.')
+
+        level_objects = []
+        if include_level:
+            flt = ObjectFilter(x_min=x_start - 200, x_max=x_end + 200)
+            level_objects = (await editor.get_objects(flt, 200000))['objects']
+        world = World.from_objects(level_objects + planned)
+        t0 = timeline.time_at(x_start)
+        speed = timeline.x_at(t0)[1]
+        times = [timeline.time_at(x) - t0 for x in xs]
+        report = await asyncio.to_thread(check_clicks, world, times, x_start, x_end, y_start, speed, robustness)
+        return {'clicks_x': [round(x, 1) for x in xs], 'x_start': x_start, 'x_end': round(x_end, 1),
+                'start_speed': speed, 'collision_objects': len(world.bodies), **report}
 
     # ------------------------------------------------------------ view and test
     @tool

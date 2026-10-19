@@ -63,9 +63,22 @@ already has objects...), it tells you what to do and changes nothing until it is
 | `gd_set_song` | Sets the level's song (Newgrounds or official) and song offset, keeping the objects |
 | `gd_analyze_song` | BPM, beat grid, bars, sections, drops and cuts of a song |
 | `gd_beat_to_x` | Converts song beats or times into level x positions (song offset, start speed, speed portals) |
+| `gd_check_jumps` | Simulates the cube with planned clicks: does it get through, where it dies, timing margin |
 | `gd_view` / `gd_screenshot` | Moves the editor camera and captures the game's actual frame |
 | `gd_playtest` | Starts or stops the playtest |
 | `gd_debug_tree` | Diagnostics: the scene's node tree |
+
+## Jump check
+
+`gd_check_jumps` runs the cube's physics over the level (or over planned objects that are not built yet) with the
+clicks the agent intends to make, given as x positions or as song beats. It reports whether the cube gets through,
+where and why it dies, where it would die without clicking, and how early or late every click can be. The physics
+were checked against the Pixel Sphere sample level (`tests/data`).
+
+It covers cube mode with normal size and gravity: blocks, spikes, saws, yellow pads, yellow orbs and speed portals.
+Other portals, pads, orbs and slopes stop the simulation with a message instead of giving a wrong answer, and moving
+objects are simulated at their editor positions. Hitboxes come from `src/physics/hitboxes.json`, built with
+`devtools/build_hitboxes.py`.
 
 ## Music sync
 
@@ -122,6 +135,7 @@ src/                   the gd_editor_mcp package (pyproject.toml maps the import
   versions/            address tables per GD version (JSON)
   levels/              level format: level strings, .gmd files and song time <-> x (pure logic)
   music/               downloaded songs and beat/structure analysis (pure logic)
+  physics/             cube simulator and object hitboxes (pure logic)
 tests/                 unit tests (python tests/run.py); tests/data holds a sample level
 devtools/              reverse engineering and debugging (see docs/REVERSING.md)
 ```

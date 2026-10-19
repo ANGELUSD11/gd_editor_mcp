@@ -20,6 +20,8 @@ Required workflow:
    Tools that modify the level do not work until it passes.
 2. Build section by section with gd_add_objects (or load a complete level with gd_load_level).
 3. Review what you built with gd_view + gd_screenshot and fix it with gd_get_objects / gd_delete_objects.
+4. Check every cube section with gd_check_jumps: pass the planned objects before building it, and check the level
+   again after building. Aim for a timing window of at least +-40 ms on easy levels.
 
 Music sync: find the song with gd_list_songs, set it (and the offset where the level starts) with gd_set_song,
 get its beat grid and sections with gd_analyze_song, place the speed portals, then turn beats into x positions

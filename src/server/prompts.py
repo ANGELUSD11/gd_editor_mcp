@@ -11,8 +11,9 @@ Do it like this:
    If there is a song: find it with gd_list_songs, set it with gd_set_song, analyze it with gd_analyze_song,
    match the level sections to the song sections, and get every jump, orb, portal and effect position from
    gd_beat_to_x (after placing the speed portals).
-3. Build section by section with gd_add_objects. After each section, center the camera with gd_view and
-   check it with gd_screenshot; fix anything that does not look right.
+3. Build section by section. Before building a cube section, check its jumps with gd_check_jumps (pass the
+   planned objects and clicks); then add it with gd_add_objects, center the camera with gd_view and check it with
+   gd_screenshot; fix anything that does not look right or does not pass.
 4. When you finish, run gd_playtest and take a screenshot, then summarize what you built and how to try it.
 """
 
