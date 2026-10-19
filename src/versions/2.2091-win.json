@@ -1,0 +1,104 @@
+{
+  "gd_version": "2.2091",
+  "platform": "windows-x64",
+  "exe_sha256": "4eee06d5c2e2213b",
+  "source": "geode-sdk/bindings (bindings/2.2091) + manual verification by disassembling the exe; see docs/REVERSING.md",
+  "functions": {
+    "EditorUI::deselectAll": {
+      "rva": "0x1c82b0",
+      "bytes": "48895c240857"
+    },
+    "EditorUI::getSelectedObjects": {
+      "rva": "0x1c9630",
+      "bytes": "40574883ec20"
+    },
+    "EditorUI::moveGamelayer": {
+      "rva": "0x1ae930",
+      "bytes": "48895c241048",
+      "note": "CCPoint passed by pointer"
+    },
+    "EditorUI::onDeleteSelected": {
+      "rva": "0x1b0990",
+      "bytes": "48895c241048"
+    },
+    "EditorUI::onPlaytest": {
+      "rva": "0x1b4770",
+      "bytes": "48895c241048"
+    },
+    "EditorUI::onStopPlaytest": {
+      "rva": "0x1b4990",
+      "bytes": "40534883ec20"
+    },
+    "EditorUI::selectObjects": {
+      "rva": "0x1c7590",
+      "bytes": "4885d20f8430",
+      "note": "bindings say 0x1c8500 (that is the canSelect filter); verified by hand"
+    },
+    "EditorUI::updateButtons": {
+      "rva": "0x1ad160",
+      "bytes": "48895c241048"
+    },
+    "EditorUI::updateZoom": {
+      "rva": "0x1b4c00",
+      "bytes": "40534883ec30",
+      "note": "bindings: 0x9999999; called from scrollWheel, verified by hand"
+    },
+    "GJBaseGameLayer::createBackground": {
+      "rva": "0x3119b0",
+      "bytes": "48895c241848"
+    },
+    "GJBaseGameLayer::createGroundLayer": {
+      "rva": "0x311df0",
+      "bytes": "48895c240848"
+    },
+    "GJBaseGameLayer::createMiddleground": {
+      "rva": "0x311c70",
+      "bytes": "48895c241048"
+    },
+    "GJGameLevel::getAudioFileName": {
+      "rva": "0x264790",
+      "bytes": "48895c241857"
+    },
+    "GameObject::getSaveString": {
+      "rva": "0x29c200",
+      "bytes": "488bc4488958"
+    },
+    "LevelEditorLayer::createObjectsFromSetup": {
+      "rva": "0x3ef940",
+      "bytes": "48895c241855",
+      "note": "missing from the bindings; only called from LevelEditorLayer::init, verified by hand"
+    },
+    "LevelEditorLayer::createObjectsFromString": {
+      "rva": "0x3f0150",
+      "bytes": "48895c241855"
+    },
+    "LevelEditorLayer::levelSettingsUpdated": {
+      "rva": "0x3ef860",
+      "bytes": "48895c241857",
+      "note": "LevelSettingsDelegate implementation: this = LEL + offsets.LevelSettingsDelegate"
+    },
+    "LevelSettingsObject::getSaveString": {
+      "rva": "0x40ed20",
+      "bytes": "48895c241855"
+    },
+    "operator new": {
+      "rva": "0x677540",
+      "bytes": "40534883ec20",
+      "note": "GD's operator new (malloc with new_handler), verified by hand"
+    }
+  },
+  "vtables": {
+    "GameObject": "0x754668"
+  },
+  "slots": {
+    "GameObject::getSaveString": 155
+  },
+  "offsets": {
+    "GJGameLevel::m_audioTrack": "0x2a4",
+    "GJGameLevel::m_songID": "0x2a8",
+    "LevelEditorLayer::LevelSettingsDelegate": "0x3938",
+    "LevelEditorLayer::m_level": "0x878",
+    "LevelEditorLayer::m_levelSettings": "0xdc8",
+    "LevelSettingsObject::m_songOffset": "0x158"
+  }
+}

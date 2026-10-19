@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gd-editor-mcp"
+version = "0.2.0"
+description = "MCP server to control the Geometry Dash editor live from your agent (Claude Code or another one)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "frida>=17,<18",
+    "mcp>=2.3,<3",
+    "miniaudio>=1.59",
+    "numpy>=1.24",
+    "pillow>=10",
+]
+
+[project.optional-dependencies]
+dev = ["capstone>=5"]   # devtools/disasm.py
+
+[project.scripts]
+gd-editor-mcp = "gd_editor_mcp.cli:main"
+
+[tool.setuptools]
+# The import package gd_editor_mcp lives directly in src/.
+package-dir = { "gd_editor_mcp" = "src" }
+packages = [
+    "gd_editor_mcp",
+    "gd_editor_mcp.game",
+    "gd_editor_mcp.levels",
+    "gd_editor_mcp.music",
+    "gd_editor_mcp.server",
+    "gd_editor_mcp.versions",
+]
+
+[tool.setuptools.package-data]
+gd_editor_mcp = ["game/agent/*.js", "versions/*.json"]
